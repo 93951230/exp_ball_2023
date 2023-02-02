@@ -15,122 +15,214 @@
 		</style>
 	</head>
 	<body>
-	<?php 
-	echo "Hello World!"; 
-?> 
-		<canvas id="Canvas" width="900" height="600" />
-		<font>xgfddddddddddddddddddddddddddddddD</font>
+		<canvas id="Canvas" width="900" height="600" ></canvas>
 		<script>
 			var canvas = document.getElementById("Canvas");
 			var ctx = canvas.getContext("2d");
-			var score = 0;
-			var rightPressed = false;
-			var leftPressed = false;
-			var barWi = 13;
-			var barHi = 5;
-			var barrier = [];
-			var ball = [];
-			var ballCount = 1;
-			/*OBJECT OUT*/
-			for (iteration=0;iteration<barHi;iteration++)
+			function loadIn() {
+				score = 0;
+				gameTime=0;
+				gameState = 0;
+				keys={};
+				/*
+				0:not start yet 
+				1:in-game 
+				2:lost game
+				*/
+				barWidth = 13;
+				barHeight = 5;
+				barrierArray = [];
+				/*OBJECT OUT*/
+				//Barrier
+			}
+			loadIn();
+			function barrier()
 			{
-				barrier[iteration] = [];
-				for (iteration2=0;iteration2<barWi;iteration2++)
+				this.countHi = iteration;
+				this.countWi = iteration2;
+				this.height = 55;
+				this.width = 55;
+				this.collideVar = null;
+
+				this.x = 75+(iteration2*62);
+				this.y = 70+(iteration*62);
+				this.type=0;
+				/*
+				0:blue
+				1:red
+				*/
+				if (Math.random() > 0.5)
 				{
-					(barrier[iteration])[iteration2] = new function()
-					{
-						this.countHi = iteration;
-						this.countWi = iteration2;
-						this.height = 57;
-						this.width = 57;
-						this.collideVar = null;
-						this.initialize = function()
-						{
-							this.x = 75+(iteration2*62);
-							this.y = 70+(iteration*62);
-							if (Math.random() > 0.5)
-							{
-								this.color = "#0095DD";
-							}
-							else
-							{
-								this.color = "#FF2B4A";
-							}
+					this.type=0;
+					this.color = "#0095DD";
+				}
+				else
+				{
+					this.type=1;
+					this.color = "#FF2B4A";
+				}
+				this.getcollide = function()
+				{
+					(barrierArray[this.countHi])[this.countWi] = null;
+					score += 1;
+				}
+				this.draw = function()
+				{
+					if (gameState==2){
+						if (this.type==0) {
+							this.y-=ball.animationTime/18
 						}
-						this.getcollide = function()
-						{
-							(barrier[this.countHi])[this.countWi] = null;
-							score += 1;
+						else if  (this.type==1){
+							this.y+=ball.animationTime/18;
 						}
-						this.draw = function()
-						{
-							ctx.beginPath();
-							ctx.rect(this.x-(this.width/2),this.y-(this.height/2),this.width,this.height);
-							ctx.fillStyle = this.color;
-							ctx.fill();
-							ctx.closePath();
-						}
+					}
+					ctx.beginPath();
+					ctx.rect(this.x-(this.width/2),this.y-(this.height/2),this.width,this.height);
+					ctx.fillStyle = this.color;
+					ctx.fill();
+					ctx.closePath();
+				}
+			}
+			//bottomLine
+			var bottomLine = new function(){
+				this.y = (canvas.width/2)+140;
+				this.draw = function() {
+					var r=0;var g=0;var b=0;
+					if ((canvas.width/2-ball.y <60) && (Math.abs(ball.x-boardArray[0].x)>boardArray[0].width/2) && (Math.abs(ball.x-boardArray[1].x)>boardArray[1].width/2)) {
+						let d =60-(canvas.width/2)+ball.y;
+						r = Math.floor(1.35*d/2);
+						g = Math.floor(-0.77*d/2);
+						b = Math.floor(-0.46*d/2);
+					}
+					for (let n=-1;130*n+90<canvas.width;n++) {
+						ctx.lineWidth = 6;
+						ctx.strokeStyle = "rgba("+(120+r)+","+(120+g)+","+(120+b)+",20)";
+						ctx.beginPath();
+						ctx.moveTo(130*n+gameTime%130,this.y);
+						ctx.lineTo(130*n+90+gameTime%130,this.y);
+						ctx.stroke();
+						ctx.closePath();
 					}
 				}
 			}
-			var board = new function()
+			function Board(type)
 			{
 				this.height =18;
 				this.width = 150;
 				this.collideVar = 0;
-				this.x = (canvas.height/2)+(this.width/2);
+				this.x = canvas.width-200;
 				this.y = (canvas.width/2)+140;
-				this.draw = function()
+				this.type=type;
+				this.update = function()
 				{
-					ctx.beginPath();
-					ctx.rect(this.x-(this.width/2),this.y-(this.height/2),this.width,this.height);
-					ctx.fillStyle = "#141012";
-					ctx.fill();
-					ctx.closePath();
+					if (ball.y >= bottomLine.y) {
+						gameState=2;
+					}
+					if (this.type) {
+						if (keys["KeyD"])
+						{
+							if ((this.x + (this.width/2)) < 900)
+							{
+								this.x += 12;
+							}
+						}
+						if (keys["KeyA"])
+						{
+							if ((this.x - (this.width/2)) > 0)
+							{
+								this.x -= 12;
+							}
+						}
+					}
+					else {
+						if (keys["ArrowRight"])
+						{
+							if ((this.x + (this.width/2)) < 900)
+							{
+								this.x += 12;
+							}
+						}
+						if (keys["ArrowLeft"])
+						{
+							if ((this.x - (this.width/2)) > 0)
+							{
+								this.x -= 12;
+							}
+						}
+					}
 				}
 				this.getcollide = function()
 				{
-					NaN;
+
+				}
+			};Board.prototype.draw = function() {
+				ctx.fillStyle = "#0095DD";
+				ctx.fillRect(boardArray[0].x-(boardArray[0].width/2),boardArray[0].y-(boardArray[0].height/2),boardArray[0].width,boardArray[0].height);
+				ctx.fillStyle = "#FF2B4A";
+				ctx.fillRect(boardArray[1].x-(boardArray[1].width/2),boardArray[1].y-(boardArray[1].height/2),boardArray[0].width,boardArray[0].height);
+				let m=Math.abs(boardArray[0].x-(boardArray[0].width/2)-boardArray[1].x+(boardArray[1].width/2));
+				if (m<150) {
+					ctx.fillStyle = "rgba(30,30,30)";
+					let n=Math.min(boardArray[0].x,boardArray[1].x);
+					ctx.fillRect(n+m-75,boardArray[0].y-(boardArray[0].height/2),150-m,boardArray[0].height);
 				}
 			}
-				var ball = new function()
+			boardArray=[new Board(0),new Board(1)];
+			function Ball()
+			{
+				this.dx=0;
+				this.dy=0;
+				this.rdus = 10+Math.floor(Math.random()*20);
+				this.x;
+				this.y;
+				this.Xcooldown = 0;
+				this.Ycooldown = 0;
+				this.state=1; /*1=alive;0=dead*/
+				this.animationTime=0;
+				this.draw = function()
 				{
-					this.rdus = 15;
-					this.initialize = function()
-					{
-						this.x = (board.x+(board.width/2));
-						this.y = (canvas.width/2);
-						this.dx = 1.25;
-						this.dy = -1.25;
-						this.Xcooldown = 0;
-						this.Ycooldown = 0;
-					}
-					this.draw = function()
-					{
+					if (this.state){
 						ctx.beginPath();
 						ctx.arc(this.x,this.y,this.rdus,0,Math.PI * 2);
-						ctx.fillStyle = "#0095DD";
+						ctx.fillStyle = "rgb(80,80,80)";
 						ctx.fill();
 						ctx.closePath();
 					}
-					this.getXcollide = function()
-					{
-						if (this.Xcooldown <= 0)
-						{
-							this.dx = -this.dx;
-							this.Xcooldown = 10;
+					else {
+						let wid=this.rdus-Math.floor((this.animationTime-80)/4);
+						if (wid>0){
+							ctx.beginPath();
+							ctx.arc(this.x,this.y,this.rdus-wid/2,0,Math.PI * 2);
+							ctx.strokeStyle = "rgb(80,80,80)";
+							ctx.lineWidth=wid;
+							ctx.stroke();
+							ctx.closePath();
 						}
 					}
-					this.getYcollide = function()
+				}
+				this.getXcollide = function()
+				{
+					if (this.Xcooldown <= 0)
 					{
-						if (this.Ycooldown <= 0)
-						{
-							this.dy = -this.dy;
-							this.Ycooldown = 10;
-						}
+						this.dx = -this.dx;
+						this.Xcooldown = 10;
 					}
-					this.updating = function()
+				}
+				this.getYcollide = function()
+				{
+					if (this.Ycooldown <= 0)
 					{
+						this.dy = -this.dy;
+						this.Ycooldown = 10;
+					}
+				}
+				this.update = function()
+				{
+					if (gameState==0){
+						this.x = boardArray[0].x;
+						this.y = boardArray[0].y-this.rdus-20;
+					}
+					else if (gameState==1) {
 						this.x += this.dx;
 						this.y += this.dy;
 						if (this.Xcooldown > 0)
@@ -142,29 +234,59 @@
 							this.Ycooldown -= 1;
 						}
 					}
+					else if (gameState==2) {
+						if (this.animationTime>=80 && this.state) {
+							this.state=0;
+						}
+						this.animationTime += 1;
+					}
 				}
-				/*OBJECT OUT*/
+			};ball=new Ball();
+			/*OBJECT OUT*/
+			function world_init(args) {
+				switch (args){
+					case 0:{//classic barrier generate
+						for (iteration=0;iteration<barHeight;iteration+=1)
+						{
+							barrierArray[iteration] = [];
+							for (iteration2=0;iteration2<barWidth;iteration2++)
+							{
+								(barrierArray[iteration])[iteration2] = new barrier();
+							}
+						}
+					}
+				}
+			}
 			function keyDownHandler(e) 
 			{
-				if(e.key == "d" || e.key == "ArrowRight")
-				{
-					rightPressed = true;
-				}
-				else if(e.key == "a" || e.key == "ArrowLeft")
-				{
-					leftPressed = true;
+				keys[e.code]=true;
+				if (e.code=="Space"){//game control handler
+					if (gameState==0){
+						gameState=1;//aiming
+						let c=Math.cos(((gameTime%120)/240+1/4)*Math.PI);
+						let s=Math.sin(((gameTime%120)/240+1/4)*Math.PI);
+						if(gameTime%240 <120){
+							ball.dx = 10*c;
+							ball.dy = -10*s;
+						}
+						else {
+							ball.dx = -10*c;
+							ball.dy = -10*s;
+						}
+						console.log(ball.dy,c,s);
+					}
+					else if (gameState==2) {
+						loadIn();
+						boardArray=[new Board(0),new Board(1)];
+						ball=new Ball();
+						world_init(0);
+						gameState=0;
+					}
 				}
 			}
 			function keyUpHandler(e)
 			{
-				if(e.key == "d" || e.key == "ArrowRight")
-				{
-					rightPressed = false;
-				}
-				else if(e.key == "a" || e.key == "ArrowLeft")
-				{
-					leftPressed = false;
-				}
+				keys[e.code]=false;
 			}
 			document.addEventListener("keydown", keyDownHandler, false);
 			document.addEventListener("keyup", keyUpHandler, false);
@@ -182,7 +304,7 @@
 					}
 				}
             }
-			/*ez collide idenifying*/
+			/*ez collision identifying*/
 			function collide(object,getHurt)
             {
 				let Xcondition = ((object.x+object.rdus > getHurt.x-(getHurt.width/2)) && (object.x-object.rdus < getHurt.x+(getHurt.width/2)));
@@ -213,81 +335,83 @@
 					getHurt.collideVar = null;
 				}
             }
-			
-			for (iteration=0;iteration<barHi;iteration++)
-			{
-				for (iteration2 = 0;iteration2 < barWi;iteration2++)
-				{
-					(barrier[iteration][iteration2]).initialize();
-				}
-			}
-			for (iteration = 0;iteration < ballCount;iteration++)
-			{
-				ball.initialize();
-			}
-			
-			function drawScore()
-			{
-				ctx.font = "40px Microsoft JhengHei";
-				ctx.fillStyle = "#0095DD";
-				ctx.fillText("分數 : " + score, 10, 590);
-			}
 
+			//big water mountain
+			world_init(0);
+			
 			function rendering() 
 			{
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				drawScore();
-				board.draw();
-				for (iteration=0;iteration<barHi;iteration++)
+				ctx.textAlign="start";
+				if (gameState==1)
 				{
-					for (iteration2 = 0;iteration2 < barWi;iteration2++)
+					ctx.font = "40px Microsoft JhengHei";
+					ctx.fillStyle = "#0095DD";
+					ctx.fillText("Score : " + score, 10, 580);//draw score
+				}
+				else if (gameState==0) {
+					ctx.font = "30px Microsoft JhengHei";//waiting start
+					ctx.fillStyle = "#0095DA";
+					ctx.fillText("Press Space to Start.", 10, 580);
+					ctx.font = "15px Microsoft JhengHei";
+					ctx.fillText("Press A/D and arrow <-/-> to control.", 10, 550);
+					ctx.beginPath();//aim bar
+					ctx.lineWidth=4;
+					ctx.strokeStyle="rgb(120,120,120)";
+					let c=Math.cos(((gameTime%120)/240+1/4)*Math.PI);
+					let s=Math.sin(((gameTime%120)/240+1/4)*Math.PI);
+					if(gameTime%240 <120){
+						ctx.moveTo(   ball.x+2*c*ball.rdus,    ball.y-2*s*ball.rdus   );
+						ctx.lineTo(   ball.x+4*c*ball.rdus,    ball.y-4*s*ball.rdus   );
+					}
+					else {
+						ctx.moveTo(   ball.x-2*c*ball.rdus,    ball.y-2*s*ball.rdus   );
+						ctx.lineTo(   ball.x-4*c*ball.rdus,    ball.y-4*s*ball.rdus   );
+					}
+					ctx.stroke();
+					ctx.closePath();
+					gameTime%120;
+				}
+				else if (gameState==2) {
+					ctx.font = "60px Microsoft JhengHei";
+					ctx.textAlign="center";
+					ctx.fillStyle = "#0095DA";
+					ctx.fillText("Game Over", canvas.width/2, canvas.height/2-45);
+					ctx.font = "20px Microsoft JhengHei";
+					ctx.fillStyle = "rgb(0,120,200)";
+					ctx.fillText("Reload website or press Space.", canvas.width/2, canvas.height/2);
+				}
+				for (iteration=0;iteration<barHeight;iteration++)//render barrier
+				{
+					for (iteration2 = 0;iteration2 < barWidth;iteration2++)
 					{
-						if ((barrier[iteration])[iteration2] == null)
-						{}
+						if ((barrierArray[iteration])[iteration2] == null) {}
 						else
 						{
-							(barrier[iteration])[iteration2].draw();
-							collide(ball,(barrier[iteration])[iteration2]);
+							(barrierArray[iteration])[iteration2].draw();
+							collide(ball,(barrierArray[iteration])[iteration2]);
 						}
 					}
 				}
-				for (iteration = 0;iteration <ballCount;iteration++)
+				bottomLine.draw();
+				ball.draw();
+				ball.update();
+				if (Incollide(ball,canvas) == "ud")
 				{
-					
-					ball.draw();
-					ball.updating();
-					collide(ball,board);
-					if (Incollide(ball,canvas) == "ud")
-					{
-						ball.dx = -ball.dx;
-					}
-					if (Incollide(ball,canvas) == "lr")
-					{
-						ball.dy = -ball.dy;
-					}
+					ball.dx = -ball.dx;
 				}
-				if (rightPressed)
+				if (Incollide(ball,canvas) == "lr")
 				{
-					if ((board.x + (board.width/2)) < 900)
-					{
-						board.x += 5;
-					}
+					ball.dy = -ball.dy;
 				}
-				else if (leftPressed)
-				{
-					if ((board.x - (board.width/2)) > 0)
-					{
-						board.x -= 5;
-					}
-				}
-				board.draw();
+				collide(ball,boardArray[0]);
+				collide(ball,boardArray[1]);
+				boardArray[0].draw();
+				boardArray[0].update();
+				boardArray[1].update();
+				gameTime+=1;
 			}
-			
-			function Start()
-			{
-				setInterval("rendering()", 2);
-			}
-			setInterval("rendering()", 2);
+			setInterval(rendering, 10);
 		</script>
 	</body>
 </html>
